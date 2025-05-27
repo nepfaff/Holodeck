@@ -40,7 +40,7 @@ by default these will save to `~/.objathor-assets/...`, you can change this dire
 ## Usage
 You can use the following command to generate a new environment.
 ```
-python holodeck/main.py --query "a living room" --openai_api_key <OPENAI_API_KEY>
+python ai2holodeck/main.py --query "a living room" --openai_api_key $OPENAI_API_KEY
 ```
 Our system uses `gpt-4o-2024-05-13`, **so please ensure you have access to it.**
 
