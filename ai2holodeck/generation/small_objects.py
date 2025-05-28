@@ -20,10 +20,16 @@ from ai2holodeck.generation.utils import (
 
 
 class SmallObjectGenerator:
-    def __init__(self, object_retriever: ObjathorRetriever, llm: OpenAI):
+    def __init__(
+        self,
+        object_retriever: ObjathorRetriever,
+        llm: OpenAI,
+        use_multiprocessing: bool = False,
+    ):
         self.llm = llm
         self.object_retriever = object_retriever
         self.database = object_retriever.database
+        self.use_multiprocessing = use_multiprocessing
 
         # set kinematic to false for small objects
         self.json_template = {
@@ -167,10 +173,16 @@ class SmallObjectGenerator:
             (receptacle, small_objects, receptacle2asset_id)
             for receptacle, small_objects in receptacle2small_object_plans.items()
         ]
-        pool = multiprocessing.Pool(processes=4)
-        results = pool.map(self.select_small_objects_per_receptacle, packed_args)
-        pool.close()
-        pool.join()
+
+        if self.use_multiprocessing:
+            pool = multiprocessing.Pool(processes=4)
+            results = pool.map(self.select_small_objects_per_receptacle, packed_args)
+            pool.close()
+            pool.join()
+        else:
+            results = [
+                self.select_small_objects_per_receptacle(args) for args in packed_args
+            ]
 
         for result in results:
             receptacle2small_objects[result[0]] = result[1]
@@ -201,12 +213,12 @@ class SmallObjectGenerator:
             candidates = self.object_retriever.retrieve(
                 [f"a 3D model of {object_name}"], self.clip_threshold
             )
+            print(f"Retrieved {len(candidates)} candidates for {object_name}")
             candidates = [
                 candidate
                 for candidate in candidates
                 if get_annotations(self.database[candidate[0]])["onObject"] == True
             ]  # Only select objects that can be placed on other objects
-
             valid_candidates = []  # Only select objects with high confidence
 
             for candidate in candidates:
@@ -241,7 +253,6 @@ class SmallObjectGenerator:
                 selected_candidate = self.random_select(valid_candidates)
                 selected_asset_id = selected_candidate[0]
                 selected_asset_ids = [selected_asset_id] * quantity
-
             elif variance_type == "varied":
                 for i in range(quantity):
                     selected_candidate = self.random_select(valid_candidates)
@@ -249,7 +260,6 @@ class SmallObjectGenerator:
                     selected_asset_ids.append(selected_asset_id)
                     if len(valid_candidates) > 1:
                         valid_candidates.remove(selected_candidate)
-
             for i in range(quantity):
                 small_object_dimensions = get_bbox_dims(
                     self.database[selected_asset_ids[i]]
@@ -280,6 +290,8 @@ class SmallObjectGenerator:
             size = max(dimensions["x"], dimensions["z"])
             ordered_small_objects.append((object_name, asset_id, size))
         ordered_small_objects.sort(key=lambda x: x[2], reverse=True)
+
+        print(f"Selected {len(ordered_small_objects)} small objects for {receptacle}")
 
         return receptacle, ordered_small_objects
 
