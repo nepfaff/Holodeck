@@ -73,6 +73,28 @@ uv run python -m ai2holodeck.main --query "a living room" \
     --use_constraint True
 ```
 
+### Headless servers (no display)
+AI2-THOR requires an X11 display for image/video generation. On headless servers, use a virtual display:
+
+```bash
+# Install xvfb
+sudo apt-get install xvfb
+
+# Run with virtual framebuffer
+xvfb-run -a uv run python -m ai2holodeck.main --query "a living room"
+```
+
+Alternatively, if you have an NVIDIA GPU:
+```bash
+sudo ai2thor-xorg start
+uv run python -m ai2holodeck.main --query "a living room"
+```
+
+Or skip image generation entirely:
+```bash
+uv run python -m ai2holodeck.main --query "a living room" --generate_image False
+```
+
 Our system uses `gpt-4o-2024-05-13`, **so please ensure you have access to it.**
 
 **Note:** To yield better layouts, use `DFS` as the solver. If you pull the repo before `12/28/2023`, you must set the [argument](https://github.com/allenai/Holodeck/blob/386b0a868def29175436dc3b1ed85b6309eb3cad/main.py#L78) `--use_milp` to `False` to use `DFS`.
