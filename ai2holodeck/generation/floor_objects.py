@@ -10,7 +10,7 @@ import time
 import editdistance
 import matplotlib.pyplot as plt
 import numpy as np
-from langchain import PromptTemplate, OpenAI
+from langchain_core.prompts import PromptTemplate
 from rtree import index
 from scipy.interpolate import interp1d
 from shapely.geometry import Polygon, Point, box, LineString
@@ -22,7 +22,7 @@ from ai2holodeck.generation.utils import get_bbox_dims
 
 
 class FloorObjectGenerator:
-    def __init__(self, object_retriever: ObjathorRetriever, llm: OpenAI):
+    def __init__(self, object_retriever: ObjathorRetriever, llm):
         self.json_template = {
             "assetId": None,
             "id": None,

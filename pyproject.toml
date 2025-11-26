@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai2holodeck"
+version = "0.0.2"
+readme = "README.md"
+license = {file = "LICENSE"}
+description = "Language Guided Generation of 3D Embodied AI Environments"
+requires-python = "==3.10.*"
+
+dependencies = [
+    "cvxpy",
+    "cchardet",
+    "pillow",
+    "colorama",
+    "open-clip-torch",
+    "transformers",
+    "shapely",
+    "sentence-transformers",
+    "prior",
+    "procthor",
+    "objaverse",
+    "rtree",
+    "scipy",
+    "moviepy<2.0.0",
+    "numpy<2",
+    "openai>=1.0.0",
+    "langchain>=0.1.0",
+    "langchain-openai>=0.0.5",
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "gurobipy>=10.0.0",
+    "Werkzeug>=2.0.1",
+    "Flask>=2.0.1",
+    "compress-pickle",
+    "compress-json",
+    "black",
+    "objathor",
+    "editdistance",
+    "ai2thor==0+8524eadda94df0ab2dbb2ef5a577e4d37c712897",
+    "attrs>=25.4.0",
+    "langchain-community>=0.4.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[tool.setuptools.packages.find]
+include = ["ai2holodeck*"]
+
+[tool.uv]
+index-strategy = "unsafe-best-match"
+
+[[tool.uv.index]]
+name = "ai2thor-pypi"
+url = "https://ai2thor-pypi.allenai.org"
+explicit = true
+
+[tool.uv.sources]
+ai2thor = { index = "ai2thor-pypi" }

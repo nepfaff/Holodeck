@@ -6,7 +6,6 @@ import torch
 import torch.nn.functional as F
 from ai2thor.controller import Controller
 from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
-from langchain import OpenAI
 from procthor.constants import FLOOR_Y
 from procthor.utils.types import Vector3
 
@@ -20,7 +19,7 @@ from ai2holodeck.generation.utils import (
 
 
 class SmallObjectGenerator:
-    def __init__(self, object_retriever: ObjathorRetriever, llm: OpenAI):
+    def __init__(self, object_retriever: ObjathorRetriever, llm):
         self.llm = llm
         self.object_retriever = object_retriever
         self.database = object_retriever.database
@@ -167,10 +166,8 @@ class SmallObjectGenerator:
             (receptacle, small_objects, receptacle2asset_id)
             for receptacle, small_objects in receptacle2small_object_plans.items()
         ]
-        pool = multiprocessing.Pool(processes=4)
-        results = pool.map(self.select_small_objects_per_receptacle, packed_args)
-        pool.close()
-        pool.join()
+        # Disable multiprocessing - ChatOpenAI objects can't be pickled
+        results = [self.select_small_objects_per_receptacle(args) for args in packed_args]
 
         for result in results:
             receptacle2small_objects[result[0]] = result[1]

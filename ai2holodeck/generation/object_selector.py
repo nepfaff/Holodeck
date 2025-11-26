@@ -10,7 +10,7 @@ from typing import Dict, List
 import torch
 import torch.nn.functional as F
 from colorama import Fore
-from langchain import PromptTemplate, OpenAI
+from langchain_core.prompts import PromptTemplate
 from shapely import Polygon
 
 import ai2holodeck.generation.prompts as prompts
@@ -30,7 +30,7 @@ EXPECTED_OBJECT_ATTRIBUTES = [
 
 
 class ObjectSelector:
-    def __init__(self, object_retriever: ObjathorRetriever, llm: OpenAI):
+    def __init__(self, object_retriever: ObjathorRetriever, llm):
         # object retriever
         self.object_retriever = object_retriever
         self.database = object_retriever.database
@@ -60,7 +60,8 @@ class ObjectSelector:
 
         self.random_selection = False
         self.reuse_selection = False
-        self.multiprocessing = True
+        # Disable multiprocessing since ChatOpenAI objects can't be pickled
+        self.multiprocessing = False
 
     def select_objects(self, scene, additional_requirements="N/A"):
         rooms_types = [room["roomType"] for room in scene["rooms"]]

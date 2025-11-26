@@ -19,8 +19,15 @@ Holodeck is based on [AI2-THOR](https://ai2thor.allenai.org/ithor/documentation/
 **Note:** To yield better layouts, use `DFS` as the solver. If you pull the repo before `12/28/2023`, you must set the [argument](https://github.com/allenai/Holodeck/blob/386b0a868def29175436dc3b1ed85b6309eb3cad/main.py#L78) `--use_milp` to `False` to use `DFS`.
 
 ## Installation
-After cloning the repo, you can install the required dependencies using the following commands:
+
+### Using uv (recommended)
+After cloning the repo, install using [uv](https://docs.astral.sh/uv/):
+```bash
+uv sync
 ```
+
+### Using conda (alternative)
+```bash
 conda create --name holodeck python=3.10
 conda activate holodeck
 pip install -r requirements.txt
@@ -30,18 +37,42 @@ pip install --extra-index-url https://ai2thor-pypi.allenai.org ai2thor==0+8524ea
 ## Data
 Download the data by running the following commands:
 ```bash
-python -m objathor.dataset.download_holodeck_base_data --version 2023_09_23
-python -m objathor.dataset.download_assets --version 2023_09_23
-python -m objathor.dataset.download_annotations --version 2023_09_23
-python -m objathor.dataset.download_features --version 2023_09_23
+uv run python -m objathor.dataset.download_holodeck_base_data --version 2023_09_23
+uv run python -m objathor.dataset.download_assets --version 2023_09_23
+uv run python -m objathor.dataset.download_annotations --version 2023_09_23
+uv run python -m objathor.dataset.download_features --version 2023_09_23
 ```
-by default these will save to `~/.objathor-assets/...`, you can change this director by specifying the `--path` argument.  If you change the `--path`, you'll need to set the `OBJAVERSE_ASSETS_DIR` environment variable to the path where the assets are stored when you use Holodeck.
+By default these will save to `~/.objathor-assets/...`. You can change this directory by specifying the `--path` argument. If you change the `--path`, you'll need to set the `OBJAVERSE_ASSETS_DIR` environment variable to the path where the assets are stored when you use Holodeck.
 
 ## Usage
-You can use the following command to generate a new environment.
+Set your OpenAI API key:
+```bash
+export OPENAI_API_KEY=<your-api-key>
 ```
-python holodeck/main.py --query "a living room" --openai_api_key <OPENAI_API_KEY>
+
+### Single-room scenes
+```bash
+uv run python -m ai2holodeck.main --query "a living room" --single_room True
 ```
+
+### Multi-room houses
+```bash
+uv run python -m ai2holodeck.main --query "a one-bedroom apartment"
+```
+
+The `--single_room` flag controls scene complexity:
+- `--single_room False` (default): LLM designs multiple connected rooms based on the query
+- `--single_room True`: Forces generation of only one room
+
+### Additional options
+```bash
+uv run python -m ai2holodeck.main --query "a living room" \
+    --generate_image True \
+    --generate_video False \
+    --add_ceiling False \
+    --use_constraint True
+```
+
 Our system uses `gpt-4o-2024-05-13`, **so please ensure you have access to it.**
 
 **Note:** To yield better layouts, use `DFS` as the solver. If you pull the repo before `12/28/2023`, you must set the [argument](https://github.com/allenai/Holodeck/blob/386b0a868def29175436dc3b1ed85b6309eb3cad/main.py#L78) `--use_milp` to `False` to use `DFS`.

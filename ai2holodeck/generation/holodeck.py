@@ -4,8 +4,19 @@ from typing import Optional, Dict, Any, Tuple
 
 import compress_json
 import open_clip
-from langchain.llms import OpenAI
+from langchain_openai import ChatOpenAI
 from sentence_transformers import SentenceTransformer
+
+
+class CallableLLM:
+    """Wrapper to make ChatOpenAI callable like the old OpenAI LLM API."""
+
+    def __init__(self, chat_model: ChatOpenAI):
+        self.chat_model = chat_model
+
+    def __call__(self, prompt: str) -> str:
+        response = self.chat_model.invoke(prompt)
+        return response.content
 from tqdm import tqdm
 
 from ai2holodeck.constants import (
@@ -67,11 +78,12 @@ class Holodeck:
             os.environ["OPENAI_ORG"] = openai_org
 
         # initialize llm
-        self.llm = OpenAI(
-            model_name=LLM_MODEL_NAME,
+        chat_model = ChatOpenAI(
+            model=LLM_MODEL_NAME,
             max_tokens=2048,
-            openai_api_key=openai_api_key,
+            api_key=openai_api_key,
         )
+        self.llm = CallableLLM(chat_model)
 
         # initialize CLIP
         (

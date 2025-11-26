@@ -6,7 +6,7 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
-from langchain import PromptTemplate, OpenAI
+from langchain_core.prompts import PromptTemplate
 from shapely.geometry import Polygon, box, Point, LineString
 from shapely.ops import substring
 
@@ -16,7 +16,7 @@ from ai2holodeck.generation.utils import get_bbox_dims
 
 
 class WallObjectGenerator:
-    def __init__(self, object_retriever: ObjathorRetriever, llm: OpenAI):
+    def __init__(self, object_retriever: ObjathorRetriever, llm):
         self.json_template = {
             "assetId": None,
             "id": None,
@@ -64,10 +64,8 @@ class WallObjectGenerator:
             )
             for room in scene["rooms"]
         ]
-        pool = multiprocessing.Pool(processes=4)
-        all_placements = pool.map(self.generate_wall_objects_per_room, packed_args)
-        pool.close()
-        pool.join()
+        # Disable multiprocessing - ChatOpenAI objects can't be pickled
+        all_placements = [self.generate_wall_objects_per_room(args) for args in packed_args]
 
         for placements in all_placements:
             wall_objects += placements
