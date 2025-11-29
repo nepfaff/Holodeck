@@ -46,30 +46,33 @@ class ObjathorRetriever:
             np.float32
         )
 
-        thor_clip_features_dict = compress_pickle.load(
-            os.path.join(HOLODECK_THOR_FEATURES_DIR, "clip_features.pkl")
-        )  # clip features
-        thor_sbert_features_dict = compress_pickle.load(
-            os.path.join(HOLODECK_THOR_FEATURES_DIR, "sbert_features.pkl")
-        )  # clip features
-        assert thor_clip_features_dict["uids"] == thor_sbert_features_dict["uids"]
+        # thor_clip_features_dict = compress_pickle.load(
+        #     os.path.join(HOLODECK_THOR_FEATURES_DIR, "clip_features.pkl")
+        # )  # clip features
+        # thor_sbert_features_dict = compress_pickle.load(
+        #     os.path.join(HOLODECK_THOR_FEATURES_DIR, "sbert_features.pkl")
+        # )  # clip features
+        # assert thor_clip_features_dict["uids"] == thor_sbert_features_dict["uids"]
 
-        thor_uids = thor_clip_features_dict["uids"]
-        thor_clip_features = thor_clip_features_dict["img_features"].astype(np.float32)
-        thor_sbert_features = thor_sbert_features_dict["text_features"].astype(
-            np.float32
-        )
+        # thor_uids = thor_clip_features_dict["uids"]
+        # thor_clip_features = thor_clip_features_dict["img_features"].astype(np.float32)
+        # thor_sbert_features = thor_sbert_features_dict["text_features"].astype(
+        #     np.float32
+        # )
 
         self.clip_features = torch.from_numpy(
-            np.concatenate([objathor_clip_features, thor_clip_features], axis=0)
+            # np.concatenate([objathor_clip_features, thor_clip_features], axis=0)
+            np.concatenate([objathor_clip_features], axis=0)
         )
         self.clip_features = F.normalize(self.clip_features, p=2, dim=-1)
 
         self.sbert_features = torch.from_numpy(
-            np.concatenate([objathor_sbert_features, thor_sbert_features], axis=0)
+            # np.concatenate([objathor_sbert_features, thor_sbert_features], axis=0)
+            np.concatenate([objathor_sbert_features], axis=0)
         )
 
-        self.asset_ids = objathor_uids + thor_uids
+        # self.asset_ids = objathor_uids + thor_uids
+        self.asset_ids = objathor_uids
 
         self.clip_model = clip_model
         self.clip_preprocess = clip_preprocess
