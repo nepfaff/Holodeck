@@ -16,8 +16,8 @@ from ai2holodeck.constants import OBJATHOR_ASSETS_DIR
 from ai2holodeck.generation.holodeck import Holodeck
 
 # Default paths
-CSV_FILE = "/home/ubuntu/hsm/prompts.csv"
-RESULTS_DIR = "./data/scenes_batch"
+CSV_FILE = str(Path.home() / "SceneEval/input/annotations.csv")
+RESULTS_DIR = "./data/scenes_sceneeval"
 
 
 def main():
@@ -34,9 +34,10 @@ def main():
     )
     parser.add_argument(
         "--single_room",
-        action="store_true",
-        default=True,
-        help="Generate single room scenes (default: True)",
+        type=str,
+        choices=["true", "false", "csv"],
+        default="csv",
+        help="Single room mode: 'true', 'false', or 'csv' (read from is_house column)",
     )
     parser.add_argument(
         "--generate_image",
@@ -61,21 +62,32 @@ def main():
     print(f"Generate image: {args.generate_image}")
     print(f"Generate video: {args.generate_video}")
 
-    # Initialize Holodeck model once
-    print("\nInitializing Holodeck model...")
-    model = Holodeck(
-        openai_api_key=os.environ.get("OPENAI_API_KEY"),
-        openai_org=os.environ.get("OPENAI_ORG"),
-        objaverse_asset_dir=OBJATHOR_ASSETS_DIR,
-        single_room=args.single_room,
-    )
-
     # Read prompts from CSV
     with open(args.csv_file, "r") as f:
         prompts = list(csv.DictReader(f))
 
+    # Sort by is_house when using csv mode (single rooms first, houses last)
+    if args.single_room == "csv":
+        prompts.sort(key=lambda x: x.get("is_house", "False").lower() == "true")
+
     total = len(prompts)
     print(f"Loaded {total} prompts from CSV")
+
+    # Determine initial single_room value
+    if args.single_room == "csv":
+        # Start with single_room=True (for is_house=False rows)
+        current_single_room = True
+    else:
+        current_single_room = args.single_room == "true"
+
+    # Initialize Holodeck model
+    print(f"\nInitializing Holodeck model (single_room={current_single_room})...")
+    model = Holodeck(
+        openai_api_key=os.environ.get("OPENAI_API_KEY"),
+        openai_org=os.environ.get("OPENAI_ORG"),
+        objaverse_asset_dir=OBJATHOR_ASSETS_DIR,
+        single_room=current_single_room,
+    )
 
     for i, row in enumerate(prompts):
         prompt_id = int(row["ID"])
@@ -88,6 +100,21 @@ def main():
 
         description = row["Description"]
         save_dir = results_dir / f"scene_{prompt_id:03d}"
+
+        # Determine single_room for this row
+        if args.single_room == "csv":
+            is_house = row.get("is_house", "False").lower() == "true"
+            row_single_room = not is_house
+            # Re-initialize model if single_room value changed
+            if row_single_room != current_single_room:
+                current_single_room = row_single_room
+                print(f"\nRe-initializing Holodeck model (single_room={current_single_room})...")
+                model = Holodeck(
+                    openai_api_key=os.environ.get("OPENAI_API_KEY"),
+                    openai_org=os.environ.get("OPENAI_ORG"),
+                    objaverse_asset_dir=OBJATHOR_ASSETS_DIR,
+                    single_room=current_single_room,
+                )
 
         print(f"\n{'='*60}")
         print(f"Scene {prompt_id} ({i+1}/{total}): {description[:50]}...")
